@@ -1,0 +1,1 @@
+console.log('Hello World (pra nao quebrar a maldiÇão)'); //  escreve no console do navegador
