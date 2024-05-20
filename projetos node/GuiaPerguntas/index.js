@@ -4,6 +4,7 @@ const bodyParser = require("body-parser");
 const connection = require("./database/database")
 const Pergunta = require("./database/Pergunta")
 const Resposta = require("./database/Resposta")
+const Voto = require("./database/Voto");
 
 
 //database
@@ -51,7 +52,7 @@ app.get("/pergunta/:id",function(req,res){
 
            Resposta.findAll({
             where: {perguntaId: pergunta.id},
-            order: [['id', 'DESC']]
+            order: [['respostaRate', 'DESC']] 
            }).then(respostas =>{
             res.render("pergunta",
             {pergunta:pergunta,
@@ -64,6 +65,96 @@ app.get("/pergunta/:id",function(req,res){
         }
     })
 })
+
+// extra: sistema de rate
+
+app.post("/votar", function(req, res) {
+    let respostaId = req.body.respostaId;
+    let voto = req.body.voto;
+    let ipAddress = req.ip;
+
+    Voto.findOne({
+        where: {
+            respostaId: respostaId,
+            ipAddress: ipAddress
+        }
+    }).then(existingVoto => {
+        if (existingVoto) {
+            // se o usuário já votou, permitir a troca de voto
+            let previousVote = existingVoto.dataValues.voto;
+            if (previousVote === voto) {
+                // se o voto é o mesmo, não fazer nada
+                res.redirect('back');
+            } else {
+                // atualizar o voto existente
+                existingVoto.update({ voto: voto }).then(() => {
+                    Resposta.findByPk(respostaId).then(resposta => {
+                        if (resposta) {
+                            if (previousVote === 'upvote') {
+                                resposta.decrement('respostaRate').then(() => {
+                                    if (voto === 'downvote') {
+                                        resposta.decrement('respostaRate').then(() => {
+                                            res.redirect('back');
+                                        });
+                                    } else {
+                                        res.redirect('back');
+                                    }
+                                });
+                            } else if (previousVote === 'downvote') {
+                                resposta.increment('respostaRate').then(() => {
+                                    if (voto === 'upvote') {
+                                        resposta.increment('respostaRate').then(() => {
+                                            res.redirect('back');
+                                        });
+                                    } else {
+                                        res.redirect('back');
+                                    }
+                                });
+                            }
+                        } else {
+                            res.status(404).send("Resposta não encontrada.");
+                        }
+                    }).catch(err => {
+                        console.error(err);
+                        res.status(500).send("Ocorreu um erro ao processar o voto.");
+                    });
+                });
+            }
+        } else {
+            // registrar o novo voto
+            Voto.create({
+                respostaId: respostaId,
+                ipAddress: ipAddress,
+                voto: voto
+            }).then(() => {
+                Resposta.findByPk(respostaId).then(resposta => {
+                    if (resposta) {
+                        if (voto === 'upvote') {
+                            resposta.increment('respostaRate').then(() => {
+                                res.redirect('back');
+                            });
+                        } else if (voto === 'downvote') {
+                            resposta.decrement('respostaRate').then(() => {
+                                res.redirect('back');
+                            });
+                        } else {
+                            res.status(400).send("Voto inválido.");
+                        }
+                    } else {
+                        res.status(404).send("Resposta não encontrada.");
+                    }
+                }).catch(err => {
+                    console.error(err);
+                    res.status(500).send("Ocorreu um erro ao processar o voto.");
+                });
+            });
+        }
+    }).catch(err => {
+        console.error(err);
+        res.status(500).send("Ocorreu um erro ao verificar o voto.");
+    });
+});
+
 
 app.post("/salvarpergunta",function (req,res){
     let titulo = req.body.Titulo;
