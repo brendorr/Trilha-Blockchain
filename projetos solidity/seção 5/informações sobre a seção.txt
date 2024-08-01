@@ -1,0 +1,76 @@
+MAPPING
+funciona basicamente como um hash, você tem uma chave associada a um valor, esse valor pode ser um uint, um bool, etc. Normalmente usado para associar o saldo de um endereço (nesse caso teríamos um adress associado a um uint) ou as permissões de um endereço(um adress associado a um bool, se ele for true é porque o adress tem aquelas permissões).
+
+Sintaxe
+
+mapping(keyType => valueType) public name;
+
+Exemplo
+
+pragma solidity ^0.8.0;
+
+contract Example {
+    // Define um mapping que associa endereços a saldos (uint)
+    mapping(address => uint) public balances;
+
+    // Função para definir o saldo de um endereço
+    function setBalance(address _address, uint _balance) public {
+        balances[_address] = _balance;
+    }
+
+    // Função para obter o saldo de um endereço
+    function getBalance(address _address) public view returns (uint) {
+        return balances[_address];
+    }
+}
+
+Exemplo usando etherium
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+contract EtherBank {
+    // Mapeamento de endereços para saldos
+    mapping(address => uint) public balances;
+
+    // Evento para registrar depósitos
+    event Deposit(address indexed account, uint amount);
+
+    // Evento para registrar saques
+    event Withdrawal(address indexed account, uint amount);
+
+    // Função para depositar Ether no contrato
+    function deposit() public payable {
+        // Atualiza o saldo do remetente
+        balances[msg.sender] += msg.value;
+        // Emite um evento de depósito
+        emit Deposit(msg.sender, msg.value);
+    }
+
+    // Função para verificar o saldo de um endereço
+    function getBalance(address _address) public view returns (uint) {
+        return balances[_address];
+    }
+
+    // Função para sacar Ether do contrato
+    function withdraw(uint _amount) public {
+        // Verifica se o remetente tem saldo suficiente
+        require(balances[msg.sender] >= _amount, "Saldo insuficiente");
+
+        // Atualiza o saldo do remetente antes de transferir o Ether
+        balances[msg.sender] -= _amount;
+
+        // Transfere o Ether de volta para o remetente
+        payable(msg.sender).transfer(_amount);
+
+        // Emite um evento de saque
+        emit Withdrawal(msg.sender, _amount);
+    }
+}
+**DETALHE EXTREMAMENTE IMPORTANTE: O SALDO DEVE SER ATUALIZADO ANTES DE PERMITIR O SAQUE, ISSO DEVE EVITAR ALGUM ROUBO MILIONARIO.**
+
+
+
+STRUCTS
+Como contracts são basicamente classes, você pode fazer agregações, por exemplo: Faça um contrato com um construtor baseado no adress do sender, após isso, passe esse objeto para outro contrato para que ele possa manipula-lo.
+
