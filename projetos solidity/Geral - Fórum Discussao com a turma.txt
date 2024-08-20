@@ -1,0 +1,17 @@
+1. Onde ficam hospedados ou instalados os Smart Contracts?
+
+R: São armazenados na blockchain e, considerando as propriedades da blockchain (descentralizada, imutável, etc.), temos uma garantia também da imutabilidade desse mesmo contrato. Como cada contrato é um código a ser executado, existe um custo para implementar esse contrato nas mainnets, por isso, quando estamos desenvolvendo contratos, usamos testnets para testá-los.
+
+2. Como os Smart Contracts garantem que os dados estão sincronizados na Blockchain?
+
+R: Da mesma forma que ocorre a sincronização de transações envolvendo moedas virtuais. Quando alguém realiza uma transação envolvendo um smart contract, essa transação é propagada a todos os nós da rede. Dessa forma, essa transação é adicionada a um bloco que eventualmente será minerado, garantindo que essa transação fique guardada permanentemente na blockchain.
+
+3. Quais limitações existentes no que pode ser feito nos Smart Contracts?
+
+R:
+
+Muito caro, tanto para manter uma blockchain privada quanto para ficar rodando esses contratos na mainnet, em função do sistema de gás.
+
+Para receber dados externos (choveu ontem? Qual o valor do dólar? Quem ganhou a presidência dos EUA?), o smart contract precisa utilizar um oráculo, o que, por sua vez, gera a possibilidade de falhas, já que se o oráculo falhar, o smart contract também falha.
+
+Uma vez feito o deploy do contrato na rede, não será possível alterá-lo, fazendo com que existam erros permanentes. Apesar disso, existem alguns sistemas que permitem "versionar" o contrato, usando o proxy.
